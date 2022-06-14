@@ -1,4 +1,5 @@
-const asyncHandler = require('express-async-handler')
+// use async handler if you do not want to write try-catch code/ or promise chains 
+const asyncHandler = require('express-async-handler') 
 const Goal = require('../models/goalModel')
 
 // @desc Get goals
