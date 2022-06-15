@@ -1,12 +1,13 @@
 // use async handler if you do not want to write try-catch code/ or promise chains 
 const asyncHandler = require('express-async-handler') 
 const Goal = require('../models/goalModel')
+const User = require('../models/userModel')
 
 // @desc Get goals
 // @route GET /api/goals
 // @access Private
 const getGoals = asyncHandler(async (req, res) => {
-    const goals = await Goal.find()
+    const goals = await Goal.find({ user: req.user.id })
     res.status(200).json(goals)
 })
 
@@ -20,7 +21,8 @@ const setGoal = asyncHandler( async (req, res) => {
     }
 
     const newGoal = await Goal.create({
-        text: req.body.text
+        text: req.body.text,
+        user: req.user.id
     })
 
     res.status(200).json(newGoal)
@@ -35,6 +37,19 @@ const updateGoal = asyncHandler( async (req, res) => {
     if(!goal2Update){
         res.status(400)
         throw new Error('Goal not found')
+    }
+
+    const user = await User.findById(req.user.id)
+    //check user
+    if(!user){
+        res.status(401)
+        throw new Error('User not found!')
+    }
+
+    //make sure logged in user matches goal user 
+    if(goal2Update.user.toString() !== user.id){
+        res.status(401)
+        throw new Error("User not authorized")
     }
 
     const updatedGoal = await Goal.findByIdAndUpdate(req.params.id, req.body, {
@@ -54,6 +69,20 @@ const deleteGoal = asyncHandler( async (req, res) => {
         res.status(400)
         throw Error('Goal does not exist')
     }
+
+    const user = await User.findById(req.user.id)
+    //check user
+    if(!user){
+        res.status(401)
+        throw new Error('User not found!')
+    }
+
+    //make sure logged in user matches goal user 
+    if(goal2Delete.user.toString() !== user.id){
+        res.status(401)
+        throw new Error("User not authorized")
+    }
+
 
     //const deletedGoal = await Goal.findByIdAndDelete(req.params.id)
 
